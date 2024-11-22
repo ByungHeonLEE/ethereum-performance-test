@@ -41,6 +41,7 @@ services:
       - --network=holesky
       - --execution-endpoint=http://geth:8551
       - --execution-jwt=/root/jwt/jwt.hex
+      - --checkpoint-sync-url=https://holesky.beaconstate.info  # 체크포인트 동기화 URL 추가
       - --http
       - --http-address=0.0.0.0
       - --metrics
