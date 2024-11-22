@@ -38,7 +38,7 @@ services:
     command:
       - lighthouse
       - beacon_node
-      - --holesky
+      - --network=holesky
       - --execution-endpoint=http://geth:8551
       - --execution-jwt=/root/jwt/jwt.hex
       - --http
