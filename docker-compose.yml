@@ -12,7 +12,7 @@ services:
       - geth-data:/root/.ethereum
       - ./jwt.hex:/root/jwt/jwt.hex:ro
     command:
-      - --goerli
+      - --holesky
       - --http
       - --http.addr=0.0.0.0
       - --http.api=eth,net,engine,admin
@@ -38,7 +38,7 @@ services:
     command:
       - lighthouse
       - beacon_node
-      - --network=goerli
+      - --holesky
       - --execution-endpoint=http://geth:8551
       - --execution-jwt=/root/jwt/jwt.hex
       - --http
