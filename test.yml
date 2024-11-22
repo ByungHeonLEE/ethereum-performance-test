@@ -1,0 +1,161 @@
+version: '3.8'
+
+services:
+  ###################
+  # Execution Layer #
+  ###################
+  
+  geth:
+    image: ethereum/client-go:latest
+    ports:
+      - "8545:8545"
+      - "8546:8546"
+      - "6060:6060"
+      - "8551:8551"
+    volumes:
+      - geth-data:/root/.ethereum
+      - ./jwt.hex:/root/jwt/jwt.hex:ro
+    command:
+      - --http
+      - --http.addr=0.0.0.0
+      - --http.api=eth,net,engine,admin
+      - --metrics
+      - --metrics.addr=0.0.0.0
+      - --authrpc.addr=0.0.0.0
+      - --authrpc.jwtsecret=/root/jwt/jwt.hex
+      - --goerli
+    container_name: geth
+
+  nethermind:
+    image: nethermind/nethermind:latest
+    ports:
+      - "8547:8545"
+      - "8548:8546"
+      - "7060:7060"
+      - "8552:8551"
+    volumes:
+      - nethermind-data:/root/.nethermind
+      - ./jwt.hex:/root/jwt/jwt.hex:ro
+    environment:
+      - NETHERMIND_CONFIG=goerli
+      - NETHERMIND_METRICS_ENABLED=true
+    container_name: nethermind
+
+  reth:
+    image: paradigmxyz/reth:latest
+    ports:
+      - "8549:8545"
+      - "8550:8546"
+      - "8553:8551"
+      - "9090:9090"
+    volumes:
+      - reth-data:/root/.local/share/reth
+      - ./jwt.hex:/root/jwt/jwt.hex:ro
+    command:
+      - node
+      - --chain=goerli
+      - --http
+      - --metrics
+      - --jwt-secret=/root/jwt/jwt.hex
+    container_name: reth
+
+  erigon:
+    image: thorax/erigon:latest
+    ports:
+      - "8551:8551"
+      - "8554:8545"
+      - "8555:8546"
+      - "8556:8551"
+      - "6061:6060"
+    volumes:
+      - erigon-data:/root/.local/share/erigon
+      - ./jwt.hex:/root/jwt/jwt.hex:ro
+    command:
+      - --chain=goerli
+      - --metrics
+      - --http
+      - --http.api=eth,net,engine,admin
+      - --authrpc.jwtsecret=/root/jwt/jwt.hex
+    container_name: erigon
+
+  ###################
+  # Consensus Layer #
+  ###################
+
+  lighthouse:
+    image: sigp/lighthouse:latest
+    ports:
+      - "5052:5052"
+      - "5054:5054"
+    volumes:
+      - lighthouse-data:/root/.lighthouse
+      - ./jwt.hex:/root/jwt/jwt.hex:ro
+    command:
+      - lighthouse
+      - beacon_node
+      - --network=goerli
+      - --http
+      - --http-address=0.0.0.0
+      - --metrics
+      - --metrics-address=0.0.0.0
+    container_name: lighthouse
+
+  prysm:
+    image: gcr.io/prysmaticlabs/prysm/beacon-chain:latest
+    ports:
+      - "4000:4000"
+      - "8080:8080"
+    volumes:
+      - prysm-data:/data
+      - ./jwt.hex:/root/jwt/jwt.hex:ro
+    command:
+      - --goerli
+      - --accept-terms-of-use
+      - --monitoring-host=0.0.0.0
+    container_name: prysm
+
+  nimbus:
+    image: statusim/nimbus-eth2:latest
+    ports:
+      - "9190:9190"
+      - "5052:5052"
+    volumes:
+      - nimbus-data:/home/user/.local/share/nimbus-eth2
+      - ./jwt.hex:/root/jwt/jwt.hex:ro
+    command:
+      - --network=goerli
+      - --metrics
+      - --metrics-address=0.0.0.0
+    container_name: nimbus
+
+  ###################
+  # Monitoring Stack #
+  ###################
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+
+volumes:
+  geth-data:
+  nethermind-data:
+  reth-data:
+  erigon-data:
+  lighthouse-data:
+  prysm-data:
+  nimbus-data:
+  prometheus-data:
+  grafana-data:

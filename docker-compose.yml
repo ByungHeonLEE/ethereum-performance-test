@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # Execution Layer - Geth
+  geth:
+    image: ethereum/client-go:latest
+    ports:
+      - "8545:8545"   # HTTP-RPC
+      - "8551:8551"   # Engine API (CL과 통신)
+      - "6060:6060"   # 메트릭
+    volumes:
+      - geth-data:/root/.ethereum
+      - ./jwt.hex:/root/jwt/jwt.hex:ro
+    command:
+      - --goerli
+      - --http
+      - --http.addr=0.0.0.0
+      - --http.api=eth,net,engine,admin
+      - --metrics
+      - --metrics.addr=0.0.0.0
+      - --authrpc.addr=0.0.0.0
+      - --authrpc.port=8551
+      - --authrpc.vhosts=*
+      - --authrpc.jwtsecret=/root/jwt/jwt.hex
+    container_name: geth
+
+  # Consensus Layer - Lighthouse
+  lighthouse:
+    image: sigp/lighthouse:latest
+    depends_on:
+      - geth
+    ports:
+      - "5052:5052"  # P2P
+      - "5054:5054"  # 메트릭
+    volumes:
+      - lighthouse-data:/root/.lighthouse
+      - ./jwt.hex:/root/jwt/jwt.hex:ro
+    command:
+      - lighthouse
+      - beacon_node
+      - --network=goerli
+      - --execution-endpoint=http://geth:8551
+      - --execution-jwt=/root/jwt/jwt.hex
+      - --http
+      - --http-address=0.0.0.0
+      - --metrics
+      - --metrics-address=0.0.0.0
+    container_name: lighthouse
+
+volumes:
+  geth-data:
+  lighthouse-data:
