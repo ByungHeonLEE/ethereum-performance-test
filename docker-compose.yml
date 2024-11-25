@@ -81,7 +81,7 @@ services:
       - --metrics-address=0.0.0.0
     container_name: lighthouse
 
-    nimbus:
+  nimbus:
     image: statusim/nimbus-eth2:latest
     ports:
       - "9190:9190"
