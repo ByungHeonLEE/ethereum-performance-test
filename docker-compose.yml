@@ -24,6 +24,39 @@ services:
       - --authrpc.jwtsecret=/root/jwt/jwt.hex
     container_name: geth
 
+  nethermind:
+    image: nethermind/nethermind:latest
+    ports:
+      - "8547:8545"
+      - "8548:8546"
+      - "7060:7060"
+      - "8552:8551"
+    volumes:
+      - nethermind-data:/root/.nethermind
+      - ./jwt.hex:/root/jwt/jwt.hex:ro
+    environment:
+      - NETHERMIND_CONFIG=holesky
+      - NETHERMIND_METRICS_ENABLED=true
+    container_name: nethermind
+
+  reth:
+    image: paradigmxyz/reth:latest
+    ports:
+      - "8549:8545"
+      - "8550:8546"
+      - "8553:8551"
+      - "9090:9090"
+    volumes:
+      - reth-data:/root/.local/share/reth
+      - ./jwt.hex:/root/jwt/jwt.hex:ro
+    command:
+      - node
+      - --chain=holesky
+      - --http
+      - --metrics
+      - --jwt-secret=/root/jwt/jwt.hex
+    container_name: reth
+
   # Consensus Layer - Lighthouse
   lighthouse:
     image: sigp/lighthouse:latest
@@ -48,6 +81,46 @@ services:
       - --metrics-address=0.0.0.0
     container_name: lighthouse
 
+    nimbus:
+    image: statusim/nimbus-eth2:latest
+    ports:
+      - "9190:9190"
+      - "5056:5052"
+    volumes:
+      - nimbus-data:/home/user/.local/share/nimbus-eth2
+      - ./jwt.hex:/root/jwt/jwt.hex:ro
+    command:
+      - --network=holesky
+      - --metrics
+      - --metrics-address=0.0.0.0
+    container_name: nimbus
+
+  ###################
+  # Monitoring Stack #
+  ###################
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+
 volumes:
   geth-data:
+  nethermind-data:
+  reth-data:
   lighthouse-data:
+  nimbus-data:
+  prometheus-data:
+  grafana-data:
